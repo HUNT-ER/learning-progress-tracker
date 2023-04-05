@@ -3,18 +3,26 @@ package tracker.entities;
 import java.util.Objects;
 
 public class Entity {
+
   protected int id;
   protected String name;
+
   public Entity(int id, String name) {
     this.id = id;
     this.name = name;
   }
+
+  public void setId(int id) {
+    this.id = id;
+  }
   public int getId() {
     return id;
   }
+
   public String getName() {
     return name;
   }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {

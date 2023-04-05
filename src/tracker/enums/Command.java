@@ -3,7 +3,8 @@ package tracker.enums;
 import java.util.Arrays;
 
 public enum Command {
-  EXIT("exit"), ADD_STUDENTS("add students"), BACK("back"), UNKNOWN("unknown");// QUIT, HELP;
+  EXIT("exit"), ADD_STUDENTS("add students"), BACK("back"), UNKNOWN("unknown"), LIST(
+      "list"), ADD_POINTS("add points"), FIND("find");// QUIT, HELP;
   private String description;
 
   Command(String description) {

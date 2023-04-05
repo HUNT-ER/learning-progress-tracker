@@ -1,9 +1,12 @@
 package tracker.ui;
 
-import java.util.StringJoiner;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import tracker.db.TempStudentStorage;
+import tracker.entities.Student;
 import tracker.entities.UnsavedStudent;
 import tracker.enums.Command;
 import tracker.session.Session;
@@ -34,6 +37,15 @@ public class MainUi extends CommandLineUi {
       case ADD_STUDENTS:
         addStudents();
         break;
+      case LIST:
+        showStudents();
+        break;
+      case ADD_POINTS:
+        addPoints();
+        break;
+      case FIND:
+        findStudent();
+        break;
       default:
         saveAndPrintOutput("Enter 'exit' to exit the program.\n");
         break;
@@ -52,27 +64,39 @@ public class MainUi extends CommandLineUi {
     while (!isBack) {
       String input = inputReader.getStringInput().trim();
       //проверяем, если ввод является командой и если это команда BACK, то выходим из процесса
-      if (Command.isCommand(input) && Command.valueOf(input.toUpperCase()).equals(Command.BACK)) {
+      if (Command.isCommand(input) && Command.getByDescription(input).equals(Command.BACK)) {
         isBack = true;
       } else if (!isCorrectCredentials(input)) {
         continue;
       } else {
-        registerStudent(input);
-        numberAddedStudents++;
+        if (registerStudent(input)) {
+          numberAddedStudents++;
+        }
       }
     }
     saveAndPrintOutput("Total " + numberAddedStudents + " students have been added.\n");
     return numberAddedStudents;
   }
 
-  private void registerStudent(String student) {
+  private boolean isAlreadyRegisteredStudent(String email) {
+    return TempStudentStorage.getStudents().stream()
+        .map(student -> student.getEmail())
+        .anyMatch(x -> x.equals(email));
+  }
+
+  private boolean registerStudent(String student) {
     Pattern pattern = Pattern.compile("^(\\S+)\\s(.+)\\s(.+)$");
     Matcher matcher = pattern.matcher(student);
     matcher.find();
     UnsavedStudent unsavedStudent = new UnsavedStudent(matcher.group(1), matcher.group(2),
         matcher.group(3));
+    if (isAlreadyRegisteredStudent(unsavedStudent.getEmail())) {
+      saveAndPrintOutput("This email is already taken.\n");
+      return false;
+    }
     TempStudentStorage.addStudent(unsavedStudent);
     saveAndPrintOutput("The student has been added.\n");
+    return true;
   }
 
   private boolean isCorrectCredentials(String credentials) {
@@ -96,5 +120,100 @@ public class MainUi extends CommandLineUi {
       return false;
     }
     return true;
+  }
+
+  private void showStudents() {
+    List<Student> students = TempStudentStorage.getStudents();
+    if (students.size() == 0) {
+      saveAndPrintOutput("No students found\n");
+      return;
+    }
+    StringBuilder output = new StringBuilder();
+    output.append("Students:\n");
+    students.forEach(
+        student -> output.append(Integer.valueOf(student.getId()).toString() + "\n"));
+
+    saveAndPrintOutput(output.toString());
+  }
+
+  private boolean isNumber(String number) {
+    try {
+      Integer.parseInt(number);
+    } catch (NumberFormatException e) {
+      return false;
+    }
+    return true;
+  }
+
+  private void addPoints() {
+    saveAndPrintOutput("Enter an id and points or 'back' to return\n");
+    boolean isBack = false;
+    while (!isBack) {
+      String input = inputReader.getStringInput().trim();
+      if (Command.isCommand(input) && Command.getByDescription(input).equals(Command.BACK)) {
+        isBack = true;
+        break;
+      } else if (!isCorrectPoints(input)) {
+        saveAndPrintOutput("Incorrect points format\n");
+        continue;
+      }
+      //костыль чтобы зкарыть их тесты, айди не должен быть буквенным
+      String[] idAndPoints = input.split("\\s+");
+      if (!isNumber(idAndPoints[0])) {
+        saveAndPrintOutput("No student is found for id=" + idAndPoints[0] + "\n");
+        continue;
+      }
+
+      int[] idAndPointsInfo = Arrays.stream(input.split("\\s+"))
+          .mapToInt(Integer::parseInt)
+          .toArray();
+
+      int studentId = idAndPointsInfo[0];
+      Optional<Student> foundStudent = TempStudentStorage.getStudentById(studentId);
+
+      if (foundStudent.isEmpty()) {
+        saveAndPrintOutput("No student is found for id=" + studentId + "\n");
+        continue;
+      }
+
+      foundStudent.get().updatePoints(new int[]{1, 2, 3, 4},
+          Arrays.copyOfRange(idAndPointsInfo, 1, idAndPointsInfo.length));
+      saveAndPrintOutput("Points updated.\n");
+    }
+  }
+
+  private boolean isCorrectPoints(String pointsInfo) {
+    String addPointsPattern = "^^(\\w+\\s)(\\d+\\s){3}\\d+$";
+    return pointsInfo.matches(addPointsPattern);
+  }
+
+  private void findStudent() {
+    saveAndPrintOutput("Enter an id or 'back' to return\n");
+    boolean isBack = false;
+    while (!isBack) {
+      String input = inputReader.getStringInput().trim();
+      if (Command.isCommand(input) && Command.getByDescription(input).equals(Command.BACK)) {
+        isBack = true;
+        break;
+      } else if(!input.matches("^\\d+$")) {
+        saveAndPrintOutput("Incorrect id format\n");
+        continue;
+      }
+      Optional<Student> foundStudent = TempStudentStorage.getStudentById(Integer.parseInt(input));
+
+      if (foundStudent.isEmpty()) {
+        saveAndPrintOutput("No student is found for id=" + input + "\n");
+        continue;
+      }
+      Student student = foundStudent.get();
+      StringBuilder output = new StringBuilder();
+      output.append(student.getId() + " points: Java=" + student.getAcademicSubjects().get(0).getPoint());
+      output.append("; DSA=" + student.getAcademicSubjects().get(1).getPoint());
+      output.append("; Databases=" + student.getAcademicSubjects().get(2).getPoint());
+      output.append("; Spring=" + student.getAcademicSubjects().get(3).getPoint());
+      output.append("\n");
+
+      saveAndPrintOutput(output.toString());
+    }
   }
 }
