@@ -208,7 +208,7 @@ public class MainUi extends CommandLineUi {
       Student student = foundStudent.get();
       StringBuilder output = new StringBuilder();
       output.append(student.getId() + " points: Java=" + student.getAcademicSubjects().get(0).getPoint());
-      output.append("; DSA=" + student.getAcademicSubjects().get(1).getPoint());
+      output.append("; Dsa=" + student.getAcademicSubjects().get(1).getPoint());
       output.append("; Databases=" + student.getAcademicSubjects().get(2).getPoint());
       output.append("; Spring=" + student.getAcademicSubjects().get(3).getPoint());
       output.append("\n");

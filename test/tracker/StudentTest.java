@@ -10,9 +10,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import tracker.entities.AcademicSubject;
-import tracker.entities.Entity;
 import tracker.entities.Student;
+import tracker.entities.subjects.AcademicSubject;
 
 public class StudentTest {
 
@@ -21,6 +20,41 @@ public class StudentTest {
   @BeforeEach
   public void initStudent() {
     this.student = new Student(1, "Alex", "Hunter", "hunter@gmail.com");
+  }
+
+  private static Stream<Arguments> provideCorrectArgumentsForUpdatePoints() {
+    return Stream.of(
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{1, 2, 3, 4}),
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{10, 2, 3, 5}),
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{18, 2, 3, 4}),
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{3, 2, 26, 4})
+        //Arguments.of(new int[]{1, 2, 3, 4}, new int[]{156656, 20214, 302222, 45}) добавить тест на максимальное значение
+    );
+  }
+
+  private static Stream<Arguments> provideLargeArgumentsForUpdatePoints() {
+    return Stream.of(
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{10000, 200000, 300000, 4000000}),
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{1651651, 216516516, 355515, 5321}),
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{1823, 2132, 3451, 43231}),
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{601, 401, 481, 551}),
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{3445, 21111111, 26222222, 4333333}));
+  }
+
+  private static Stream<Arguments> provideArgumentsForUpdatePoints() {
+    return Stream.of(
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{1, 2, 3}, false),
+        Arguments.of(new int[]{1, 2, 3}, new int[]{1, 2, 3, 4}, false),
+        Arguments.of(new int[]{10, 15, 20, 25}, new int[]{1, 2, 3, 4}, true),
+        Arguments.of(new int[]{10, 15, 20, 25}, new int[]{1, 2, 3, 5}, true),
+        Arguments.of(new int[]{10, 15, 20, 25}, new int[]{1, -1, 0, 5}, true),
+        Arguments.of(new int[]{10, 15, 20, 25}, new int[]{10, -1, 0, 5}, false),
+        Arguments.of(new int[]{-10, 15, 20, 25}, new int[]{1, 2, 3, 4}, true),
+        Arguments.of(new int[]{-10, -15, -20, 25}, new int[]{1, 2, 3, 4}, true),
+        Arguments.of(new int[]{-10, -15, -20, 25}, new int[]{1, 2, 3, 6}, false),
+        Arguments.of(new int[]{10, -15, -20, -25}, new int[]{1, 2, 3, 6}, true),
+        Arguments.of(new int[]{10, -15, -20, -25}, new int[]{5, 2, 3, 6}, false)
+    );
   }
 
   @Test
@@ -55,7 +89,7 @@ public class StudentTest {
         .sorted(Comparator.comparingInt(AcademicSubject::getId))
         .mapToInt(value -> value.getPoint())
         .toArray();
-    Assertions.assertArrayEquals(new int[] {0,0,0,0}, studentPoints);
+    Assertions.assertArrayEquals(new int[]{0, 0, 0, 0}, studentPoints);
   }
 
   @ParameterizedTest
@@ -64,21 +98,13 @@ public class StudentTest {
     Assertions.assertEquals(subject, student.getAcademicSubjects().get(subjectId - 1).getName());
   }
 
-  private static Stream<Arguments> provideArgumentsForUpdatePoints() {
-    return Stream.of(
-        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{1, 2, 3}, false),
-        Arguments.of(new int[]{1, 2, 3}, new int[]{1, 2, 3, 4}, false),
-        Arguments.of(new int[]{10, 15, 20, 25}, new int[]{1, 2, 3, 4}, true),
-        Arguments.of(new int[]{10, 15, 20, 25}, new int[]{1, 2, 3, 5}, true),
-        Arguments.of(new int[]{10, 15, 20, 25}, new int[]{1, -1, 0, 5}, true),
-        Arguments.of(new int[]{10, 15, 20, 25}, new int[]{10, -1, 0, 5}, false),
-        Arguments.of(new int[]{-10, 15, 20, 25}, new int[]{1, 2, 3, 4}, true),
-        Arguments.of(new int[]{-10, -15, -20, 25}, new int[]{1, 2, 3, 4}, true),
-        Arguments.of(new int[]{-10, -15, -20, 25}, new int[]{1, 2, 3, 6}, false),
-        Arguments.of(new int[]{10, -15, -20, -25}, new int[]{1, 2, 3, 6}, true),
-        Arguments.of(new int[]{10, -15, -20, -25}, new int[]{5, 2, 3, 6}, false)
-    );
+  @ParameterizedTest
+  @CsvSource({"1, Java", "2, Dsa", "3, Databases", "4, Spring"})
+  public void newStudentShouldHaveDefaultSubjectsClasses(int subjectId, String subject) {
+    Assertions.assertEquals(subject,
+        student.getAcademicSubjects().get(subjectId - 1).getClass().getSimpleName());
   }
+
 
   @ParameterizedTest
   @MethodSource("provideArgumentsForUpdatePoints")
@@ -87,15 +113,6 @@ public class StudentTest {
     Assertions.assertEquals(isUpdated, student.updatePoints(subjectsId, points));
   }
 
-  private static Stream<Arguments> provideCorrectArgumentsForUpdatePoints() {
-    return Stream.of(
-        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{1, 2, 3, 4}),
-        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{10, 2, 3, 5}),
-        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{18, 2, 3, 4}),
-        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{3, 2, 26, 4}),
-        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{156656, 20214, 302222, 45})
-    );
-  }
 
   @ParameterizedTest
   @MethodSource("provideCorrectArgumentsForUpdatePoints")
@@ -124,6 +141,18 @@ public class StudentTest {
         .toArray();
 
     Assertions.assertArrayEquals(expectedPoints, studentPoints);
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideLargeArgumentsForUpdatePoints")
+  public void shouldSetMaxPointsValue(int[] subjectsId, int[] points) {
+    student.updatePoints(subjectsId, points);
+    int[] studentPoints = student.getAcademicSubjects()
+        .stream()
+        .sorted(Comparator.comparingInt(AcademicSubject::getId))
+        .mapToInt(value -> value.getPoint())
+        .toArray();
+    Assertions.assertArrayEquals(studentPoints, new int[]{600, 400, 480, 550});
   }
 
 }

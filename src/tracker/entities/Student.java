@@ -5,7 +5,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
+import tracker.entities.subjects.AcademicSubject;
+import tracker.entities.subjects.Databases;
+import tracker.entities.subjects.Dsa;
+import tracker.entities.subjects.Java;
+import tracker.entities.subjects.Spring;
 
 public class Student extends Entity {
 
@@ -30,10 +34,10 @@ public class Student extends Entity {
 
   private void addDefaultAcademicSubjects() {
     this.academicSubjects = new LinkedList<>();
-    academicSubjects.add(new AcademicSubject(1, "Java"));
-    academicSubjects.add(new AcademicSubject(2, "DSA"));
-    academicSubjects.add(new AcademicSubject(3, "Databases"));
-    academicSubjects.add(new AcademicSubject(4, "Spring"));
+    academicSubjects.add(new Java());
+    academicSubjects.add(new Dsa());
+    academicSubjects.add(new Databases());
+    academicSubjects.add(new Spring());
   }
 
   public List<AcademicSubject> getAcademicSubjects() {

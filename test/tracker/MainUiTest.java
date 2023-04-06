@@ -19,7 +19,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import tracker.db.TempStudentStorage;
-import tracker.entities.AcademicSubject;
+import tracker.entities.subjects.AcademicSubject;
 import tracker.entities.Student;
 import tracker.entities.UnsavedStudent;
 import tracker.input.UserInputService;
@@ -474,9 +474,9 @@ public class MainUiTest {
 
   @ParameterizedTest
   @CsvSource({
-      "1, '1 2 3 4', '1 points: Java=1; DSA=2; Databases=3; Spring=4\n'",
-      "2, '11 12 13 14', '2 points: Java=11; DSA=12; Databases=13; Spring=14\n'",
-      "3, '40 60 80 100', '3 points: Java=40; DSA=60; Databases=80; Spring=100\n'"
+      "1, '1 2 3 4', '1 points: Java=1; Dsa=2; Databases=3; Spring=4\n'",
+      "2, '11 12 13 14', '2 points: Java=11; Dsa=12; Databases=13; Spring=14\n'",
+      "3, '40 60 80 100', '3 points: Java=40; Dsa=60; Databases=80; Spring=100\n'"
   })
   public void shouldShowFoundStudentPoints(int studentId, String points, String pointOutput)
       throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
