@@ -1,8 +1,11 @@
 package tracker.entities;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import tracker.entities.subjects.AcademicSubject;
@@ -10,17 +13,20 @@ import tracker.entities.subjects.Databases;
 import tracker.entities.subjects.Dsa;
 import tracker.entities.subjects.Java;
 import tracker.entities.subjects.Spring;
+import tracker.enums.Course;
 
 public class Student extends Entity {
 
   private String lastname;
   private String email;
   private List<AcademicSubject> academicSubjects;
+  private boolean isNotified;
 
   public Student(int id, String name, String lastname, String email) {
     super(id, name);
     this.lastname = lastname;
     this.email = email;
+    isNotified = true;
     addDefaultAcademicSubjects();
   }
 
@@ -44,6 +50,28 @@ public class Student extends Entity {
     return Collections.unmodifiableList(academicSubjects);
   }
 
+  private Optional<AcademicSubject> getAcademicSubject(int id) {
+    return academicSubjects.stream().filter(subject -> subject.getId() == id).findFirst();
+  }
+
+  //если предмет не существует, то выбрасывается исключение NoSuchElementsException
+  public AcademicSubject getAcademicSubjectByName(String subject) {
+    if (!Course.isExistedCourse(subject)) {
+      throw new NoSuchElementException();
+    }
+    return academicSubjects.stream()
+        .filter(academicSubject -> academicSubject.getName().equalsIgnoreCase(subject)).findFirst()
+        .get();
+  }
+
+  public String[] getAcademicSubjectStats(String subject) {
+    AcademicSubject academicSubject = getAcademicSubjectByName(subject);
+    return new String[]{academicSubject.getName(), Integer.toString(academicSubject.getPoint()),
+        new BigDecimal(
+            (double) academicSubject.getPoint() / academicSubject.getMaxPointsValue()).setScale(3,
+            RoundingMode.HALF_DOWN).scaleByPowerOfTen(2) + "%"};
+  }
+
   public boolean updatePoints(int[] subjectsId, int[] points) {
     if (points.length != subjectsId.length) {
       return false;
@@ -59,8 +87,9 @@ public class Student extends Entity {
     return isUpdated;
   }
 
-  private Optional<AcademicSubject> getAcademicSubject(int id) {
-    return academicSubjects.stream().filter(subject -> subject.getId() == id).findFirst();
+  public boolean isEnrolled() {
+    return academicSubjects.stream().filter(subject -> subject.getPoint() > 0).count() > 0 ? true
+        : false;
   }
 
   @Override
@@ -75,12 +104,13 @@ public class Student extends Entity {
       return false;
     }
     Student student = (Student) o;
-    return lastname.equals(student.lastname) && email.equals(student.email);
+    return lastname.equals(student.lastname) && email.equals(student.email)
+        && academicSubjects.equals(student.academicSubjects);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), lastname, email);
+    return Objects.hash(super.hashCode(), lastname, email, academicSubjects);
   }
 
   @Override

@@ -1,5 +1,7 @@
 package tracker;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.stream.Stream;
@@ -28,7 +30,6 @@ public class StudentTest {
         Arguments.of(new int[]{1, 2, 3, 4}, new int[]{10, 2, 3, 5}),
         Arguments.of(new int[]{1, 2, 3, 4}, new int[]{18, 2, 3, 4}),
         Arguments.of(new int[]{1, 2, 3, 4}, new int[]{3, 2, 26, 4})
-        //Arguments.of(new int[]{1, 2, 3, 4}, new int[]{156656, 20214, 302222, 45}) добавить тест на максимальное значение
     );
   }
 
@@ -54,6 +55,19 @@ public class StudentTest {
         Arguments.of(new int[]{-10, -15, -20, 25}, new int[]{1, 2, 3, 6}, false),
         Arguments.of(new int[]{10, -15, -20, -25}, new int[]{1, 2, 3, 6}, true),
         Arguments.of(new int[]{10, -15, -20, -25}, new int[]{5, 2, 3, 6}, false)
+    );
+  }
+
+  private static Stream<Arguments> provideStudentPointsForEnrollTest() {
+    return Stream.of(
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{1, 2, 3, 4}, true),
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{1, 2, 3, 0}, true),
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{1, 2, 0, 0}, true),
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{1, 0, 0, 0}, true),
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{0, 1, 0, 0}, true),
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{0, 0, 1, 0}, true),
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{0, 0, 0, 1}, true),
+        Arguments.of(new int[]{1, 2, 3, 4}, new int[]{0, 0, 0, 0}, false)
     );
   }
 
@@ -153,6 +167,37 @@ public class StudentTest {
         .mapToInt(value -> value.getPoint())
         .toArray();
     Assertions.assertArrayEquals(studentPoints, new int[]{600, 400, 480, 550});
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideStudentPointsForEnrollTest")
+  public void shouldReturnCorrectIsEnrolledValue(int[] subjectsId, int[] points,
+      boolean isEnrolled) {
+    student.updatePoints(subjectsId, points);
+    Assertions.assertEquals(isEnrolled, student.isEnrolled());
+  }
+
+  public static Stream<Arguments> provideArgumentsForGettingSubjectStats() {
+    return Stream.of(
+        Arguments.of(new String[]{"Java", "10", "1.7%"}, "java"),
+        Arguments.of(new String[]{"DSA", "10", "2.5%"}, "dsa"),
+        Arguments.of(new String[]{"Databases", "10", "2.1%"}, "databases"),
+        Arguments.of(new String[]{"Spring", "10", "1.8%"}, "spring")
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideArgumentsForGettingSubjectStats")
+  public void shouldReturnArrayOfSubjectStats(String[] stats, String subject) {
+    student.updatePoints(new int[]{1, 2, 3, 4}, new int[]{10, 10, 10, 10});
+
+    Assertions.assertArrayEquals(stats, student.getAcademicSubjectStats(subject));
+  }
+
+  @Test
+  public void test() {
+    Assertions.assertEquals(6.2,
+        new BigDecimal(0.0625*100).setScale(1, RoundingMode.HALF_DOWN).doubleValue());
   }
 
 }

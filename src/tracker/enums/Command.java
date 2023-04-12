@@ -4,7 +4,8 @@ import java.util.Arrays;
 
 public enum Command {
   EXIT("exit"), ADD_STUDENTS("add students"), BACK("back"), UNKNOWN("unknown"), LIST(
-      "list"), ADD_POINTS("add points"), FIND("find");// QUIT, HELP;
+      "list"), ADD_POINTS("add points"), FIND("find"), STATISTICS("statistics"), NOTIFY(
+      "notify");// QUIT, HELP;
   private String description;
 
   Command(String description) {

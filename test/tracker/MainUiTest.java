@@ -10,18 +10,27 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import tracker.db.TempStudentStorage;
-import tracker.entities.subjects.AcademicSubject;
 import tracker.entities.Student;
 import tracker.entities.UnsavedStudent;
+import tracker.entities.subjects.AcademicSubject;
+import tracker.enums.Activity;
+import tracker.enums.Difficult;
 import tracker.input.UserInputService;
 import tracker.session.Session;
 import tracker.ui.MainUi;
@@ -504,5 +513,415 @@ public class MainUiTest {
     addStudents.invoke(mainUi);
 
     Assertions.assertEquals(expectedOutput.toString(), mainUi.getConsoleOutput().toString());
+  }
+
+  //Порядок предметов по id - Java, Dsa, Databases, Spring
+  public static Stream<Arguments> provideArgumentsForRankedListGetter() {
+    return Stream.of(
+        Arguments.of(new int[]{4, 3, 2, 1}, new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0},
+            new String[]{"Java", "DSA", "Databases", "Spring"},
+            (Predicate<AcademicSubject>) (academicSubject -> academicSubject.getPoint() > 0),
+            Collectors.counting()),
+        Arguments.of(new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1},
+            new String[]{"DSA", "Databases", "Java", "Spring"},
+            (Predicate<AcademicSubject>) (academicSubject -> academicSubject.getPoint() > 0),
+            Collectors.counting()),
+        Arguments.of(new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0},
+            new String[]{"Java"},
+            (Predicate<AcademicSubject>) (academicSubject -> academicSubject.getPoint() > 0),
+            Collectors.counting()),
+        Arguments.of(new int[]{0, 1, 0, 0}, new int[]{0, 1, 0, 0}, new int[]{0, 1, 0, 0},
+            new String[]{"DSA"},
+            (Predicate<AcademicSubject>) (academicSubject -> academicSubject.getPoint() > 0),
+            Collectors.counting()),
+        Arguments.of(new int[]{0, 0, 1, 0}, new int[]{0, 0, 1, 0}, new int[]{0, 0, 1, 0},
+            new String[]{"Databases"},
+            (Predicate<AcademicSubject>) (academicSubject -> academicSubject.getPoint() > 0),
+            Collectors.counting()),
+        Arguments.of(new int[]{0, 0, 0, 1}, new int[]{0, 0, 0, 1}, new int[]{0, 0, 0, 1},
+            new String[]{"Spring"},
+            (Predicate<AcademicSubject>) (academicSubject -> academicSubject.getPoint() > 0),
+            Collectors.counting()),
+        Arguments.of(new int[]{1, 1, 0, 4}, new int[]{3, 0, 0, 4}, new int[]{0, 0, 0, 4},
+            new String[]{"Spring", "Java", "DSA"},
+            (Predicate<AcademicSubject>) (academicSubject -> academicSubject.getPoint() > 0),
+            Collectors.counting()),
+        Arguments.of(new int[]{1, 0, 0, 4}, new int[]{1, 0, 0, 4}, new int[]{1, 0, 0, 4},
+            new String[]{"Java", "Spring"},
+            (Predicate<AcademicSubject>) (academicSubject -> academicSubject.getPoint() > 0),
+            Collectors.counting()),
+        Arguments.of(new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0},
+            new String[]{},
+            (Predicate<AcademicSubject>) (academicSubject -> academicSubject.getPoint() > 0),
+            Collectors.counting()),
+
+        Arguments.of(new int[]{4, 3, 2, 1}, new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0},
+            new String[]{"Java", "DSA", "Databases", "Spring"},
+            (Predicate<AcademicSubject>) (academicSubject -> true),
+            Collectors.summingInt(AcademicSubject::getPoint)),
+        Arguments.of(new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1},
+            new String[]{"DSA", "Databases", "Java", "Spring"},
+            (Predicate<AcademicSubject>) (academicSubject -> true),
+            Collectors.summingInt(AcademicSubject::getPoint)),
+        Arguments.of(new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0},
+            new String[]{"Java", "DSA", "Databases", "Spring"},
+            (Predicate<AcademicSubject>) (academicSubject -> true),
+            Collectors.summingInt(AcademicSubject::getPoint)),
+        Arguments.of(new int[]{0, 1, 0, 0}, new int[]{0, 1, 0, 0}, new int[]{0, 1, 0, 0},
+            new String[]{"DSA", "Databases", "Java", "Spring"},
+            (Predicate<AcademicSubject>) (academicSubject -> true),
+            Collectors.summingInt(AcademicSubject::getPoint)),
+        Arguments.of(new int[]{0, 0, 1, 0}, new int[]{0, 0, 1, 0}, new int[]{0, 0, 1, 0},
+            new String[]{"Databases", "DSA", "Java", "Spring"},
+            (Predicate<AcademicSubject>) (academicSubject -> true),
+            Collectors.summingInt(AcademicSubject::getPoint)),
+        Arguments.of(new int[]{0, 0, 0, 1}, new int[]{0, 0, 0, 1}, new int[]{0, 0, 0, 1},
+            new String[]{"Spring", "DSA", "Databases", "Java"},
+            (Predicate<AcademicSubject>) (academicSubject -> true),
+            Collectors.summingInt(AcademicSubject::getPoint)),
+        Arguments.of(new int[]{1, 1, 0, 4}, new int[]{3, 0, 0, 4}, new int[]{0, 0, 0, 4},
+            new String[]{"Spring", "Java", "DSA", "Databases"},
+            (Predicate<AcademicSubject>) (academicSubject -> true),
+            Collectors.summingInt(AcademicSubject::getPoint)),
+        Arguments.of(new int[]{1, 0, 0, 4}, new int[]{1, 0, 0, 4}, new int[]{1, 0, 0, 4},
+            new String[]{"Spring", "Java", "DSA", "Databases"},
+            (Predicate<AcademicSubject>) (academicSubject -> true),
+            Collectors.summingInt(AcademicSubject::getPoint)),
+        Arguments.of(new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0},
+            new String[]{"DSA", "Databases", "Java", "Spring"},
+            (Predicate<AcademicSubject>) (academicSubject -> true),
+            Collectors.summingInt(AcademicSubject::getPoint))
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideArgumentsForRankedListGetter")
+  public void shouldReturnRankedSubjectList(int[] points1, int[] points2, int[] points3,
+      String[] expectedList, Predicate<AcademicSubject> subjectPredicate,
+      Collector<AcademicSubject, ?, Long> groupingSign)
+      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    TempStudentStorage.addStudent(new UnsavedStudent("Alex", "Hunter", "hunter@gmail.com"));
+    TempStudentStorage.addStudent(new UnsavedStudent("Alexis", "Hunters", "hunters@gmail.com"));
+    TempStudentStorage.addStudent(new UnsavedStudent("Alexa", "Hortensia", "Hortensia@gmail.com"));
+
+    final int[] subjectsId = new int[]{1, 2, 3, 4};
+    TempStudentStorage.getStudentById(1).get().updatePoints(subjectsId, points1);
+    TempStudentStorage.getStudentById(2).get().updatePoints(subjectsId, points2);
+    TempStudentStorage.getStudentById(3).get().updatePoints(subjectsId, points3);
+
+    Method getRankedSubjectList = MainUi.class.getDeclaredMethod(
+        "getRankedSubjectList", List.class, Predicate.class, Collector.class);
+    getRankedSubjectList.setAccessible(true);
+    List<String> rankedList = ((List<Map.Entry<String, Long>>) getRankedSubjectList.invoke(mainUi,
+        TempStudentStorage.getStudents(), subjectPredicate, groupingSign)).stream()
+        .map(entry -> entry.getKey()).collect(Collectors.toList());
+
+    Assertions.assertArrayEquals(expectedList, rankedList.toArray());
+  }
+
+  public static Stream<Arguments> provideArgumentsMostPopularSubject() {
+    return Stream.of(
+        Arguments.of(new int[]{4, 3, 2, 1}, new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0},
+            "Java"),
+        Arguments.of(new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1},
+            "DSA, Databases, Java, Spring"),
+        Arguments.of(new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0},
+            "Java"),
+        Arguments.of(new int[]{0, 1, 0, 0}, new int[]{0, 1, 0, 0}, new int[]{0, 1, 0, 0},
+            "DSA"),
+        Arguments.of(new int[]{0, 0, 1, 0}, new int[]{0, 0, 1, 0}, new int[]{0, 0, 1, 0},
+            "Databases"),
+        Arguments.of(new int[]{0, 0, 0, 1}, new int[]{0, 0, 0, 1}, new int[]{0, 0, 0, 1},
+            "Spring"),
+        Arguments.of(new int[]{1, 1, 0, 4}, new int[]{3, 0, 0, 4}, new int[]{0, 0, 0, 4},
+            "Spring"),
+        Arguments.of(new int[]{1, 0, 0, 4}, new int[]{1, 0, 0, 4}, new int[]{1, 0, 0, 4},
+            "Java, Spring"),
+        Arguments.of(new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0},
+            "n/a")
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideArgumentsMostPopularSubject")
+  public void shouldReturnMostPopularSubjects(int[] points1, int[] points2, int[] points3,
+      String expectedMostPopularSubjects)
+      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    TempStudentStorage.addStudent(new UnsavedStudent("Alex", "Hunter", "hunter@gmail.com"));
+    TempStudentStorage.addStudent(new UnsavedStudent("Alexis", "Hunters", "hunters@gmail.com"));
+    TempStudentStorage.addStudent(new UnsavedStudent("Alexa", "Hortensia", "Hortensia@gmail.com"));
+
+    final int[] subjectsId = new int[]{1, 2, 3, 4};
+    TempStudentStorage.getStudentById(1).get().updatePoints(subjectsId, points1);
+    TempStudentStorage.getStudentById(2).get().updatePoints(subjectsId, points2);
+    TempStudentStorage.getStudentById(3).get().updatePoints(subjectsId, points3);
+
+    Method getMostPopularSubject = MainUi.class.getDeclaredMethod("getMostPopularSubject");
+    getMostPopularSubject.setAccessible(true);
+    String mostPopularSubjects = (String) getMostPopularSubject.invoke(mainUi);
+
+    Assertions.assertEquals(expectedMostPopularSubjects, mostPopularSubjects);
+  }
+
+  public static Stream<Arguments> provideArgumentsLeastPopularSubject() {
+    return Stream.of(
+        Arguments.of(new int[]{4, 3, 2, 1}, new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0},
+            "DSA, Databases, Spring"),
+        Arguments.of(new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1},
+            "n/a"),
+        Arguments.of(new int[]{0, 1, 0, 0}, new int[]{0, 1, 0, 0}, new int[]{0, 1, 0, 0},
+            "Java, Databases, Spring"),
+        Arguments.of(new int[]{0, 0, 1, 0}, new int[]{0, 0, 1, 0}, new int[]{0, 0, 1, 0},
+            "Java, DSA, Spring"),
+        Arguments.of(new int[]{0, 0, 0, 1}, new int[]{0, 0, 0, 1}, new int[]{0, 0, 0, 1},
+            "Java, DSA, Databases"),
+        Arguments.of(new int[]{1, 1, 0, 4}, new int[]{3, 0, 0, 4}, new int[]{0, 0, 0, 4},
+            "Databases"),
+        Arguments.of(new int[]{1, 0, 0, 4}, new int[]{1, 0, 0, 4}, new int[]{1, 0, 0, 4},
+            "DSA, Databases"),
+        Arguments.of(new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0},
+            "n/a")
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideArgumentsLeastPopularSubject")
+  public void shouldReturnLeastPopularSubjects(int[] points1, int[] points2, int[] points3,
+      String expectedLeastPopularSubjects)
+      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    TempStudentStorage.addStudent(new UnsavedStudent("Alex", "Hunter", "hunter@gmail.com"));
+    TempStudentStorage.addStudent(new UnsavedStudent("Alexis", "Hunters", "hunters@gmail.com"));
+    TempStudentStorage.addStudent(new UnsavedStudent("Alexa", "Hortensia", "Hortensia@gmail.com"));
+
+    final int[] subjectsId = new int[]{1, 2, 3, 4};
+    TempStudentStorage.getStudentById(1).get().updatePoints(subjectsId, points1);
+    TempStudentStorage.getStudentById(2).get().updatePoints(subjectsId, points2);
+    TempStudentStorage.getStudentById(3).get().updatePoints(subjectsId, points3);
+
+    Method getLeastPopularSubject = MainUi.class.getDeclaredMethod("getLeastPopularSubject");
+    getLeastPopularSubject.setAccessible(true);
+    String leastPopularSubjects = (String) getLeastPopularSubject.invoke(mainUi);
+
+    Assertions.assertEquals(expectedLeastPopularSubjects, leastPopularSubjects);
+  }
+
+  public static Stream<Arguments> provideArgumentsForRankedActivitySubject() {
+    return Stream.of(
+        Arguments.of(new int[]{4, 3, 2, 1}, new int[]{4, 3, 2, 1}, new int[]{4, 3, 2, 1},
+            "Spring", Activity.LOWEST),
+        Arguments.of(new int[]{1, 2, 6, 5}, new int[]{1, 2, 1, 1}, new int[]{1, 2, 6, 5},
+            "Java", Activity.LOWEST),
+        Arguments.of(new int[]{4, 2, 6, 5}, new int[]{4, 2, 6, 7}, new int[]{4, 2, 6, 5},
+            "DSA", Activity.LOWEST),
+        Arguments.of(new int[]{1, 1, 0, 4}, new int[]{3, 0, 0, 4}, new int[]{0, 0, 0, 4},
+            "Databases", Activity.LOWEST),
+        Arguments.of(new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1},
+            "Spring", Activity.LOWEST),
+        Arguments.of(new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0},
+            "n/a", Activity.LOWEST),
+        Arguments.of(new int[]{4, 3, 2, 1}, new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0},
+            "Java", Activity.HIGHEST),
+        Arguments.of(new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1},
+            "DSA", Activity.HIGHEST),
+        Arguments.of(new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0},
+            "Java", Activity.HIGHEST),
+        Arguments.of(new int[]{0, 1, 0, 0}, new int[]{0, 1, 0, 0}, new int[]{0, 1, 0, 0},
+            "DSA", Activity.HIGHEST),
+        Arguments.of(new int[]{0, 0, 1, 0}, new int[]{0, 0, 1, 0}, new int[]{0, 0, 1, 0},
+            "Databases", Activity.HIGHEST),
+        Arguments.of(new int[]{0, 0, 0, 1}, new int[]{0, 0, 0, 1}, new int[]{0, 0, 0, 1},
+            "Spring", Activity.HIGHEST),
+        Arguments.of(new int[]{1, 1, 0, 4}, new int[]{3, 0, 0, 4}, new int[]{0, 0, 0, 4},
+            "Spring", Activity.HIGHEST),
+        Arguments.of(new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0},
+            "n/a", Activity.HIGHEST)
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideArgumentsForRankedActivitySubject")
+  public void shouldReturnLowestActivitySubjects(int[] points1, int[] points2, int[] points3,
+      String expectedMostPopularSubjects, Activity activity)
+      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    TempStudentStorage.addStudent(new UnsavedStudent("Alex", "Hunter", "hunter@gmail.com"));
+    TempStudentStorage.addStudent(new UnsavedStudent("Alexis", "Hunters", "hunters@gmail.com"));
+    TempStudentStorage.addStudent(new UnsavedStudent("Alexa", "Hortensia", "Hortensia@gmail.com"));
+
+    final int[] subjectsId = new int[]{1, 2, 3, 4};
+    TempStudentStorage.getStudentById(1).get().updatePoints(subjectsId, points1);
+    TempStudentStorage.getStudentById(2).get().updatePoints(subjectsId, points2);
+    TempStudentStorage.getStudentById(3).get().updatePoints(subjectsId, points3);
+
+    Method getRankedActivitySubject = MainUi.class.getDeclaredMethod("getRankedActivitySubject",
+        Activity.class);
+    getRankedActivitySubject.setAccessible(true);
+    String mostPopularSubjects = (String) getRankedActivitySubject.invoke(mainUi, activity);
+
+    Assertions.assertEquals(expectedMostPopularSubjects, mostPopularSubjects);
+  }
+
+  public static Stream<Arguments> provideArgumentsForRankedDifficultSubject() {
+    return Stream.of(
+        Arguments.of(new int[]{4, 3, 2, 1}, new int[]{4, 3, 2, 1}, new int[]{4, 3, 2, 1},
+            "Spring", Difficult.HARD),
+        Arguments.of(new int[]{1, 2, 6, 5}, new int[]{1, 2, 1, 1}, new int[]{1, 2, 6, 5},
+            "Java", Difficult.HARD),
+        Arguments.of(new int[]{4, 2, 6, 5}, new int[]{4, 2, 6, 7}, new int[]{4, 2, 6, 5},
+            "DSA", Difficult.HARD),
+        Arguments.of(new int[]{1, 1, 0, 4}, new int[]{3, 1, 0, 4}, new int[]{0, 0, 0, 4},
+            "Databases", Difficult.HARD),
+        Arguments.of(new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1},
+            "Spring", Difficult.HARD),
+        Arguments.of(new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0},
+            "n/a", Difficult.HARD),
+        Arguments.of(new int[]{4, 3, 2, 1}, new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0},
+            "Java", Difficult.EASY),
+        Arguments.of(new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1}, new int[]{1, 1, 1, 1},
+            "DSA", Difficult.EASY),
+        Arguments.of(new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0}, new int[]{1, 0, 0, 0},
+            "Java", Difficult.EASY),
+        Arguments.of(new int[]{0, 1, 0, 0}, new int[]{0, 1, 0, 0}, new int[]{0, 1, 0, 0},
+            "DSA", Difficult.EASY),
+        Arguments.of(new int[]{0, 0, 1, 0}, new int[]{0, 0, 1, 0}, new int[]{0, 0, 1, 0},
+            "Databases", Difficult.EASY),
+        Arguments.of(new int[]{0, 0, 0, 1}, new int[]{0, 0, 0, 1}, new int[]{0, 0, 0, 1},
+            "Spring", Difficult.EASY),
+        Arguments.of(new int[]{1, 1, 0, 4}, new int[]{3, 0, 0, 4}, new int[]{0, 0, 0, 4},
+            "Spring", Difficult.EASY),
+        Arguments.of(new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0},
+            "n/a", Difficult.EASY)
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideArgumentsForRankedDifficultSubject")
+  public void shouldReturnActivitySubjects(int[] points1, int[] points2, int[] points3,
+      String expectedMostPopularSubjects, Difficult difficult)
+      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    TempStudentStorage.addStudent(new UnsavedStudent("Alex", "Hunter", "hunter@gmail.com"));
+    TempStudentStorage.addStudent(new UnsavedStudent("Alexis", "Hunters", "hunters@gmail.com"));
+    TempStudentStorage.addStudent(new UnsavedStudent("Alexa", "Hortensia", "Hortensia@gmail.com"));
+
+    final int[] subjectsId = new int[]{1, 2, 3, 4};
+    TempStudentStorage.getStudentById(1).get().updatePoints(subjectsId, points1);
+    TempStudentStorage.getStudentById(2).get().updatePoints(subjectsId, points2);
+    TempStudentStorage.getStudentById(3).get().updatePoints(subjectsId, points3);
+
+    Method getRankedActivitySubject = MainUi.class.getDeclaredMethod(
+        "getRankedDifficultSubject", Difficult.class);
+    getRankedActivitySubject.setAccessible(true);
+    String mostPopularSubjects = (String) getRankedActivitySubject.invoke(mainUi, difficult);
+
+    Assertions.assertEquals(expectedMostPopularSubjects, mostPopularSubjects);
+  }
+
+
+  public static Stream<Arguments> provideStatsForPrintStatistics() {
+    return Stream.of(
+        Arguments.of(new String[]{"Java", "DSA", "Java", "DSA", "Databases", "Spring"},
+            "Most popular: Java\nLeast  popular: DSA\nHighest activity: Java\nLowest activity: DSA\nEasiest course: Databases\nHardest course: Spring"),
+        Arguments.of(new String[]{"n/a", "n/a", "n/a", "n/a", "n/a", "n/a"},
+            "Most popular: n/a\nLeast  popular: n/a\nHighest activity: n/a\nLowest activity: n/a\nEasiest course: n/a\nHardest course: n/a"
+        )
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideStatsForPrintStatistics")
+  public void showSubjectsStatistics(String[] stats, String expectedOutput)
+      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    Method showSubjectsStatistics = MainUi.class.getDeclaredMethod("showSubjectsStatistics",
+        String.class,
+        String.class, String.class, String.class, String.class, String.class);
+    showSubjectsStatistics.setAccessible(true);
+
+    String output = (String) showSubjectsStatistics.invoke(mainUi, stats[0], stats[1], stats[2],
+        stats[3],
+        stats[4], stats[5]);
+    Assertions.assertEquals(expectedOutput, output);
+  }
+
+
+  public static Stream<Arguments> provideArgumentsForShowSubjectsStatistics() {
+    return Stream.of(
+        Arguments.of(new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0}, new int[]{0, 0, 0, 0},
+            "Most popular: n/a\nLeast  popular: n/a\nHighest activity: n/a\nLowest activity: n/a\nEasiest course: n/a\nHardest course: n/a\n")
+    );
+  }
+
+  //доделать тест
+  @ParameterizedTest
+  @MethodSource("provideArgumentsForShowSubjectsStatistics")
+  public void shouldReturnCorrectStatistics(int[] points1, int[] points2, int[] points3,
+      String expectedOutput)
+      throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+    TempStudentStorage.addStudent(new UnsavedStudent("Alex", "Hunter", "hunter@gmail.com"));
+    TempStudentStorage.addStudent(new UnsavedStudent("Alexis", "Hunters", "hunters@gmail.com"));
+    TempStudentStorage.addStudent(new UnsavedStudent("Alexa", "Hortensia", "Hortensia@gmail.com"));
+
+    final int[] subjectsId = new int[]{1, 2, 3, 4};
+    TempStudentStorage.getStudentById(1).get().updatePoints(subjectsId, points1);
+    TempStudentStorage.getStudentById(2).get().updatePoints(subjectsId, points2);
+    TempStudentStorage.getStudentById(3).get().updatePoints(subjectsId, points3);
+
+    Method printStatistics = MainUi.class.getDeclaredMethod("printStatistics");
+    printStatistics.setAccessible(true);
+    printStatistics.invoke(mainUi);
+
+    Assertions.assertEquals(expectedOutput, mainUi.getConsoleOutput().toString());
+  }
+
+  public static Stream<Arguments> provideArgumentsForFormattedStatisticsBySubject() {
+    return Stream.of(
+        Arguments.of(new int[]{40, 30, 20, 10}, new int[]{10, 40, 30, 20},
+            new int[]{10, 20, 40, 30}, "Spring", """
+                Spring
+                id    points    completed
+                3     30        5.5%
+                2     20        3.6%
+                1     10        1.8%"""),
+        Arguments.of(new int[]{40, 30, 20, 10}, new int[]{10, 40, 30, 20},
+            new int[]{10, 20, 40, 30}, "Java", """
+                Java
+                id    points    completed
+                1     40        6.7%
+                2     10        1.7%
+                3     10        1.7%"""),
+        Arguments.of(new int[]{40, 30, 20, 10}, new int[]{10, 40, 30, 20},
+            new int[]{10, 20, 40, 30}, "Databases", """
+                Databases
+                id    points    completed
+                3     40        8.3%
+                2     30        6.2%
+                1     20        4.2%"""),
+        Arguments.of(new int[]{40, 30, 20, 10}, new int[]{10, 40, 30, 20},
+            new int[]{10, 20, 40, 30}, "DSA", """
+                DSA
+                id    points    completed
+                2     40        10.0%
+                1     30        7.5%
+                3     20        5.0%""")
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideArgumentsForFormattedStatisticsBySubject")
+  public void asdasd(int[] points1, int[] points2, int[] points3, String subject,
+      String expectedOutput)
+      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    TempStudentStorage.addStudent(new UnsavedStudent("Alex", "Hunter", "hunter@gmail.com"));
+    TempStudentStorage.addStudent(new UnsavedStudent("Alexis", "Hunters", "hunters@gmail.com"));
+    TempStudentStorage.addStudent(new UnsavedStudent("Alexa", "Hortensia", "Hortensia@gmail.com"));
+    final int[] subjectsId = new int[]{1, 2, 3, 4};
+    TempStudentStorage.getStudentById(1).get().updatePoints(subjectsId, points1);
+    TempStudentStorage.getStudentById(2).get().updatePoints(subjectsId, points2);
+    TempStudentStorage.getStudentById(3).get().updatePoints(subjectsId, points3);
+
+    Method showSubjectStatistics = MainUi.class.getDeclaredMethod("showSubjectStatistics",
+        String.class);
+    showSubjectStatistics.setAccessible(true);
+    String s = (String) showSubjectStatistics.invoke(mainUi, subject);
+
+    Assertions.assertEquals(expectedOutput, s);
   }
 }
